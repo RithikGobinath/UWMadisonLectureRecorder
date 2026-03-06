@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lecture Recorder</title>
+    <style>
+      :root {
+        --bg: #f3f5f7;
+        --surface: #ffffff;
+        --text: #1a1f2b;
+        --muted: #5f6b7a;
+        --accent: #0f6fdf;
+        --border: #d5dce6;
+        --danger: #bd2121;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #eef3f9, #f8fafc);
+        color: var(--text);
+      }
+      main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+      h1 {
+        margin-bottom: 4px;
+      }
+      p {
+        color: var(--muted);
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+      }
+      label {
+        font-size: 14px;
+        color: var(--muted);
+        display: block;
+      }
+      input,
+      select,
+      button {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 10px;
+        margin-top: 4px;
+        font-size: 14px;
+      }
+      .weekdays {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .weekday-pill {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        border: 1px solid var(--border);
+        padding: 6px 10px;
+        border-radius: 999px;
+      }
+      button {
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #fff;
+        color: var(--text);
+      }
+      button.danger {
+        background: var(--danger);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        padding: 8px;
+        font-size: 13px;
+      }
+      .row-actions {
+        display: flex;
+        gap: 6px;
+      }
+      .status {
+        font-family: Consolas, Menlo, monospace;
+      }
+      .inline {
+        display: flex;
+        gap: 8px;
+      }
+      .inline > * {
+        flex: 1;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .error {
+        color: var(--danger);
+        font-size: 13px;
+      }
+      @media (max-width: 700px) {
+        .row-actions {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Cloud Lecture Recorder</h1>
+      <p>Configure recurring weekday schedules and monitor generated recordings.</p>
+
+      <section class="card">
+        <h2>Create Schedule</h2>
+        <div class="grid">
+          <label>
+            Stream Page URL
+            <input id="streamPageUrl" value="http://128.104.155.144/ClassroomStreams/psychology113_stream.html" />
+          </label>
+          <label>
+            Direct Stream URL (optional)
+            <input id="directStreamUrl" placeholder="https://...m3u8" />
+          </label>
+          <label>
+            Timezone
+            <input id="timezone" value="America/Chicago" />
+          </label>
+          <label>
+            Start Time
+            <input id="startTime" type="time" value="13:10" />
+          </label>
+          <label>
+            End Time
+            <input id="endTime" type="time" value="14:00" />
+          </label>
+          <label>
+            Lead Seconds
+            <input id="leadSeconds" type="number" value="60" min="0" step="60" />
+          </label>
+          <label>
+            Tail Seconds
+            <input id="tailSeconds" type="number" value="60" min="0" step="60" />
+          </label>
+        </div>
+        <div style="margin-top: 12px;">
+          <div class="muted">Weekdays</div>
+          <div class="weekdays">
+            <label class="weekday-pill"><input type="checkbox" value="1" checked />Mon</label>
+            <label class="weekday-pill"><input type="checkbox" value="2" checked />Tue</label>
+            <label class="weekday-pill"><input type="checkbox" value="3" checked />Wed</label>
+            <label class="weekday-pill"><input type="checkbox" value="4" checked />Thu</label>
+            <label class="weekday-pill"><input type="checkbox" value="5" checked />Fri</label>
+          </div>
+        </div>
+        <div class="inline" style="margin-top: 12px;">
+          <label>
+            Enabled
+            <select id="enabled">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </label>
+          <div style="display: flex; align-items: end;">
+            <button id="createBtn">Create Schedule</button>
+          </div>
+        </div>
+        <div id="createError" class="error"></div>
+      </section>
+
+      <section class="card">
+        <div class="inline">
+          <h2>Schedules</h2>
+          <button id="refreshSchedules" class="secondary">Refresh</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Weekdays</th>
+              <th>Time</th>
+              <th>Enabled</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="scheduleTable"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <div class="inline">
+          <h2>Recordings</h2>
+          <button id="refreshRecordings" class="secondary">Refresh</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Lecture Date</th>
+              <th>Schedule</th>
+              <th>Status</th>
+              <th>Duration (s)</th>
+              <th>Output</th>
+            </tr>
+          </thead>
+          <tbody id="recordingTable"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      const scheduleTable = document.getElementById("scheduleTable");
+      const recordingTable = document.getElementById("recordingTable");
+      const createError = document.getElementById("createError");
+
+      function selectedWeekdays() {
+        const values = [...document.querySelectorAll(".weekdays input:checked")].map((el) =>
+          Number(el.value)
+        );
+        return values;
+      }
+
+      async function createSchedule() {
+        createError.textContent = "";
+        const payload = {
+          streamPageUrl: document.getElementById("streamPageUrl").value,
+          directStreamUrl: document.getElementById("directStreamUrl").value || undefined,
+          timezone: document.getElementById("timezone").value,
+          weekdays: selectedWeekdays(),
+          startTime: document.getElementById("startTime").value,
+          endTime: document.getElementById("endTime").value,
+          enabled: document.getElementById("enabled").value === "true",
+          leadSeconds: Number(document.getElementById("leadSeconds").value),
+          tailSeconds: Number(document.getElementById("tailSeconds").value),
+        };
+        const response = await fetch("/api/schedules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          createError.textContent = JSON.stringify(body);
+          return;
+        }
+        await Promise.all([loadSchedules(), loadRecordings()]);
+      }
+
+      async function deleteSchedule(id) {
+        await fetch(`/api/schedules/${id}`, { method: "DELETE" });
+        await Promise.all([loadSchedules(), loadRecordings()]);
+      }
+
+      async function runNow(id) {
+        await fetch(`/api/schedules/${id}/run-now`, { method: "POST" });
+        await loadRecordings();
+      }
+
+      async function loadSchedules() {
+        const response = await fetch("/api/schedules");
+        const data = await response.json();
+        scheduleTable.innerHTML = "";
+        for (const schedule of data.schedules || []) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${schedule.id}</td>
+            <td>${(schedule.weekdays || []).join(",")}</td>
+            <td>${schedule.startTime} - ${schedule.endTime} (${schedule.timezone})</td>
+            <td class="status">${schedule.enabled}</td>
+            <td class="row-actions">
+              <button class="secondary" data-run="${schedule.id}">Run now</button>
+              <button class="danger" data-delete="${schedule.id}">Disable</button>
+            </td>
+          `;
+          scheduleTable.appendChild(tr);
+        }
+        scheduleTable.querySelectorAll("[data-delete]").forEach((button) => {
+          button.addEventListener("click", () => deleteSchedule(button.dataset.delete));
+        });
+        scheduleTable.querySelectorAll("[data-run]").forEach((button) => {
+          button.addEventListener("click", () => runNow(button.dataset.run));
+        });
+      }
+
+      async function loadRecordings() {
+        const response = await fetch("/api/recordings");
+        const data = await response.json();
+        recordingTable.innerHTML = "";
+        for (const recording of data.recordings || []) {
+          const link = recording.signedUrl
+            ? `<a href="${recording.signedUrl}" target="_blank" rel="noreferrer">Open</a>`
+            : `<span class="muted">n/a</span>`;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${recording.lectureDate}</td>
+            <td>${recording.scheduleId}</td>
+            <td class="status">${recording.status}</td>
+            <td>${recording.durationSec ?? "-"}</td>
+            <td>${link}</td>
+          `;
+          recordingTable.appendChild(tr);
+        }
+      }
+
+      document.getElementById("createBtn").addEventListener("click", createSchedule);
+      document.getElementById("refreshSchedules").addEventListener("click", loadSchedules);
+      document.getElementById("refreshRecordings").addEventListener("click", loadRecordings);
+      loadSchedules();
+      loadRecordings();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "name": "uwmadison-lecture-recorder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloud-based lecture recorder using GCP Cloud Scheduler, Cloud Run Jobs, FFmpeg, and Cloud Storage.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "dev:worker": "tsx src/worker.ts",
+    "start": "node dist/index.js",
+    "start:worker": "node dist/worker.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^7.11.2",
+    "@google-cloud/run": "^1.4.0",
+    "@google-cloud/scheduler": "^4.1.0",
+    "@google-cloud/storage": "^7.16.0",
+    "axios": "^1.11.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "luxon": "^3.6.1",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^20.16.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.3"
+  }
+}
